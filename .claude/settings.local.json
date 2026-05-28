@@ -1,8 +1,0 @@
-{
-  "permissions": {
-    "allow": [
-      "Bash(ls \"E:\\\\atlas120k\" 2>&1 | head -50)",
-      "Read(//e/atlas120k/**)"
-    ]
-  }
-}
