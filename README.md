@@ -8,6 +8,8 @@
 [![Dataset](https://img.shields.io/badge/🤗_Dataset-HuggingFace-ffcc00?style=flat)](https://huggingface.co/TimJaspersTue/datasets/atlas120k)
 [![License: CC BY-NC-SA 4.0](https://img.shields.io/badge/License-CC_BY--NC--SA_4.0-lightgrey.svg)](https://creativecommons.org/licenses/by-nc-sa/4.0/)
 
+<img src="figures/atlas120k.png" alt="ATLAS-120k dataset examples" width="100%">
+
 </div>
 
 ---
