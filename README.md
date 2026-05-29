@@ -5,7 +5,8 @@
 **Surgical Anatomy Recognition with Context Learning using Foundation Representations**
 
 [![Paper](https://img.shields.io/badge/Paper-MICCAI_2026-blue?style=flat)](https://arxiv.org/)
-[![Dataset](https://img.shields.io/badge/🤗_Dataset-HuggingFace-ffcc00?style=flat)](https://huggingface.co/TimJaspersTue/datasets/atlas120k)
+[![Dataset](https://img.shields.io/badge/🤗_Dataset-HuggingFace-ffcc00?style=flat)](https://huggingface.co/TimJaspersTue/datasets/atlas-120k)
+[![Version](https://img.shields.io/badge/dataset-v0.1.0-green?style=flat)](CHANGELOG.md)
 [![License: CC BY-NC-SA 4.0](https://img.shields.io/badge/License-CC_BY--NC--SA_4.0-lightgrey.svg)](https://creativecommons.org/licenses/by-nc-sa/4.0/)
 
 <img src="figures/atlas120k.png" alt="ATLAS-120k dataset examples" width="100%">
@@ -249,6 +250,31 @@ train_mask = lut[original_mask]
 from atlas120k.classes import train_palette  # {train_id: (R, G, B)}
 ```
 
+## Versioning
+
+The dataset and this repository follow [Semantic Versioning](https://semver.org/). The current version is **v0.1.0**.
+
+| Bump | When to use |
+|---|---|
+| **PATCH** `1.0.x` | Annotation corrections — fixed masks, corrected class labels, updated clip boundaries |
+| **MINOR** `1.x.0` | New content added — additional videos, new annotated classes, new splits |
+| **MAJOR** `x.0.0` | Breaking changes — renamed splits, changed mask format or class ID scheme |
+
+Each release updates three places:
+1. [`VERSION`](VERSION) and [`dataset_info.json`](dataset_info.json) in this repository
+2. The version badge at the top of this README and in [`CHANGELOG.md`](CHANGELOG.md)
+3. A new tagged GitHub release and a new HuggingFace dataset revision
+
+To check which version of the dataset you have locally:
+
+```python
+import json
+info = json.load(open("atlas120k/dataset_info.json"))  # included in HF release
+print(info["version"])
+```
+
+See [`CHANGELOG.md`](CHANGELOG.md) for the full history of changes.
+
 ## Ethics
 
 **Sources.** The videos in ATLAS-120k were sourced from publicly available surgical videos on YouTube, originally collected as part of the [GSViT dataset](https://github.com/SamuelSchmidgall/GSViT). Our data collection prioritized videos from medical institutions and surgeons, aiming to maximize compliance with professional consent standards.
@@ -276,9 +302,6 @@ Code in this repository: [MIT License](LICENSE)
 If you use ATLAS-120k in your research, please cite:
 
 ```bibtex
-@inproceedings{atlas2026miccai,
-  title     = {Surgical Anatomy Recognition with Context Learning using Foundation Representations},
-  booktitle = {Medical Image Computing and Computer-Assisted Intervention (MICCAI)},
-  year      = {2026},
+@inproceedings{TBA,
 }
 ```

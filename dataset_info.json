@@ -1,0 +1,23 @@
+{
+  "name": "ATLAS-120k",
+  "version": "0.1.0",
+  "paper": "Surgical Anatomy Recognition with Context Learning using Foundation Representations",
+  "venue": "MICCAI 2026",
+  "license": "CC-BY-NC-SA-4.0",
+  "splits": {
+    "train": {"videos": 70, "clips": 368, "frames": 84102},
+    "val":   {"videos": 10, "clips":  39, "frames":  9615},
+    "test":  {"videos": 20, "clips":  95, "frames": 27301}
+  },
+  "total": {
+    "videos": 100,
+    "clips": 502,
+    "frames": 121018,
+    "procedures": 14,
+    "classes": 42,
+    "train_classes": 30
+  },
+  "changelog": {
+    "0.1.0": "Initial public release."
+  }
+}
