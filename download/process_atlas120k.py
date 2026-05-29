@@ -139,18 +139,15 @@ def find_raw_video(raw_data_dir: Path, procedure: str, youtube_id: str) -> Path 
 
 
 def get_video_info(video_path: Path) -> tuple[int, int, float]:
-    cmd = [
-        "ffprobe", "-v", "error",
-        "-select_streams", "v:0",
-        "-show_entries", "stream=width,height,r_frame_rate",
-        "-of", "csv=p=0",
-        str(video_path),
-    ]
-    out = subprocess.check_output(cmd, stderr=subprocess.DEVNULL).decode().strip()
-    parts = out.split(",")
-    w, h = int(parts[0]), int(parts[1])
-    num, den = parts[2].split("/")
-    fps = float(num) / float(den)
+    cap = cv2.VideoCapture(str(video_path))
+    if not cap.isOpened():
+        raise RuntimeError(f"Cannot open video: {video_path}")
+    w   = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+    h   = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+    fps = cap.get(cv2.CAP_PROP_FPS)
+    cap.release()
+    if w == 0 or h == 0:
+        raise RuntimeError(f"Could not read dimensions from: {video_path}")
     return w, h, fps
 
 

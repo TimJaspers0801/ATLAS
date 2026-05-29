@@ -26,8 +26,9 @@ The full ATLAS project spans multiple repositories:
 | Repository | Description |
 |---|---|
 | **This repo** | Dataset download and processing scripts |
-| [ATLAS-Interactive](https://github.com/rlpddejong/ATLAS-Interactive) | Annotation platform, interactive segmentation tools and annotation models |
-| [atlas-bench](https://github.com/TimJaspers0801/atlas-bench) | Benchmark experiments and ATLAS model implementations |
+| [ATLAS-interactive](https://github.com/rlpddejong/ATLAS-Interactive) | Annotation platform, interactive segmentation tools and annotation models |
+| [ATLAS-model]() | ATLAS model implementation and training code | 
+| [ATLAS-bench](https://github.com/TimJaspers0801/atlas-bench) | Benchmark experiments of various SOTA models |
 | [SurgeNetDINO](https://github.com/rlpddejong/SurgeNetDINO) | Pretrained DINOv1/v2/v3 surgical foundation backbones |
 | [SurgeNet](https://github.com/TimJaspers0801/SurgeNet) | SurgeNet pretraining dataset used for surgical foundation models |
 
@@ -65,9 +66,30 @@ Full class definitions — including the consolidated 30-class training taxonomy
 pip install -r download/requirements.txt
 ```
 
-`ffmpeg` must be installed and available on `PATH` — it is used for fps conversion and frame extraction. See [ffmpeg.org](https://ffmpeg.org/download.html).
+`ffmpeg` must be installed and available on `PATH` — it is used for fps conversion and frame extraction. See [ffmpeg.org](https://ffmpeg.org/download.html). Note: only `ffmpeg` itself is required; `ffprobe` is not needed as video metadata is read via OpenCV.
 
-For YouTube downloads requiring authentication, provide a cookies file — see the [yt-dlp cookies guide](https://github.com/yt-dlp/yt-dlp/wiki/FAQ#how-do-i-pass-cookies-to-yt-dlp).
+**YouTube cookies are required.** The source videos are surgical content that YouTube marks as age-restricted. You must be signed in to YouTube in your browser, then authenticate the downloader using one of two methods:
+
+**Option A — read directly from your browser (easiest, no export needed):**
+```bash
+python download/download_videos.py \
+    --links_dir data/youtube_links \
+    --output_dir raw_data \
+    --cookies-from-browser chrome   # or: firefox, edge, safari
+```
+
+**Option B — export a cookies.txt file once and reuse it:**
+```bash
+# 1. Install a browser extension such as "Get cookies.txt LOCALLY" (Chrome/Firefox)
+#    and export cookies for youtube.com → save as cookies.txt
+# 2. Pass the file to the downloader:
+python download/download_videos.py \
+    --links_dir data/youtube_links \
+    --output_dir raw_data \
+    --cookies cookies.txt
+```
+
+Option A is simpler. Option B is useful on headless servers where no browser is available. See the [yt-dlp cookies guide](https://github.com/yt-dlp/yt-dlp/wiki/FAQ#how-do-i-pass-cookies-to-yt-dlp) for more details.
 
 ### Step 1 — Download annotations from HuggingFace
 
@@ -96,6 +118,8 @@ python download/download_videos.py \
 ```
 
 Videos are saved to `raw_data/<procedure>/<youtube_id>.<ext>`.
+
+> **Note:** 3 videos (`rclg8c8dQ1Q`, `EjKZ3ddx8eY`, `ZQmRKPkyB3Q`) are members-only YouTube videos and cannot be downloaded automatically. Their processed frames are included directly in the HuggingFace release, so no action is needed. They are listed in [`data/youtube_links/unavailable.txt`](data/youtube_links/unavailable.txt) for reference.
 
 ### Step 3 — Process videos into the dataset
 

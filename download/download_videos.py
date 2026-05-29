@@ -16,6 +16,12 @@ import multiprocessing
 import os
 from pathlib import Path
 
+# Ensure portable Node.js is on PATH before yt-dlp is imported, so that the
+# EJS JavaScript challenge solver can find the node runtime.
+_node_portable = os.path.join(os.path.expanduser("~"), "node-portable")
+if os.path.isfile(os.path.join(_node_portable, "node.exe")) and _node_portable not in os.environ.get("PATH", ""):
+    os.environ["PATH"] = _node_portable + os.pathsep + os.environ.get("PATH", "")
+
 import yt_dlp
 
 
@@ -36,7 +42,13 @@ def parse_args():
     parser.add_argument(
         "--cookies",
         default=None,
-        help="Path to cookies file for authenticated downloads (see yt-dlp docs)",
+        help="Path to a cookies.txt file for authenticated downloads",
+    )
+    parser.add_argument(
+        "--cookies-from-browser",
+        default=None,
+        metavar="BROWSER",
+        help="Read cookies directly from a logged-in browser: chrome, firefox, edge, safari",
     )
     parser.add_argument(
         "--workers",
@@ -55,7 +67,7 @@ def parse_args():
 
 def read_links(txt_path: Path) -> list[str]:
     urls = []
-    with open(txt_path) as f:
+    with open(txt_path, encoding="utf-8-sig") as f:  # utf-8-sig strips BOM if present
         for line in f:
             line = line.strip()
             if line and not line.startswith("#"):
@@ -70,16 +82,23 @@ def video_id_from_url(url: str) -> str:
     return url.rstrip("/").split("/")[-1][:11]
 
 
-def download_video(url: str, output_dir: str, cookies: str | None) -> tuple[str, bool, str | None]:
+def download_video(
+    url: str, output_dir: str, cookies: str | None, cookies_from_browser: str | None
+) -> tuple[str, bool, str | None]:
+    node_exe = os.path.join(os.path.expanduser("~"), "node-portable", "node.exe")
     ydl_opts = {
-        "format": "best[ext!=webm][width>=1920]/best[ext!=webm]",
+        "format": "bestvideo[ext=mp4]+bestaudio[ext=m4a]/best[ext=mp4]/best",
         "outtmpl": os.path.join(output_dir, "%(id)s.%(ext)s"),
         "retries": 3,
         "quiet": True,
         "no_warnings": False,
+        # Explicitly register Node.js for YouTube's n-challenge solver
+        "js_runtimes": {"node": {"path": node_exe} if os.path.isfile(node_exe) else {}},
     }
     if cookies:
         ydl_opts["cookiefile"] = cookies
+    if cookies_from_browser:
+        ydl_opts["cookiesfrombrowser"] = (cookies_from_browser,)
     try:
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             ydl.download([url])
@@ -89,7 +108,7 @@ def download_video(url: str, output_dir: str, cookies: str | None) -> tuple[str,
 
 
 def _worker(args):
-    return download_video(*args)
+    return download_video(*args)  # (url, output_dir, cookies, cookies_from_browser)
 
 
 def main():
@@ -121,7 +140,7 @@ def main():
             if vid_id in existing_ids:
                 print(f"[SKIP] {procedure}/{vid_id} already downloaded")
             else:
-                tasks.append((url, str(proc_out), args.cookies))
+                tasks.append((url, str(proc_out), args.cookies, args.cookies_from_browser))
 
     print(f"[INFO] {len(tasks)} videos to download across {len(txt_files)} procedure(s)")
     if not tasks:
