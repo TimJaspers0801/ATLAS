@@ -40,7 +40,7 @@ The full ATLAS project spans multiple repositories:
 | Endoscapes-Seg50 | 1 | 6 | 50 | — | 493 | ✓ | |
 | CholecSeg8k | 1 | 12 | 17 | — | 8,080 | ✓ | |
 | DSAD | 1 | 11 | 32 | — | 14,625 | | ✓ |
-| **ATLAS-120k** | **14** | **42** | **100** | **503** | **120,776** | **✓** | **✓** |
+| **ATLAS-120k** | **14** | **42** | **100** | **502** | **121,018** | **✓** | **✓** |
 
 ### Procedures
 
@@ -150,9 +150,14 @@ data/
 download/
   download_videos.py           ← Step 2: download YouTube videos
   process_atlas120k.py         ← Step 3: extract frames with surgical filtering
+  dataset_stats.py             ← print per-split statistics and cross-check dataset_info.json
   generate_clip_index.py       ← (authors only) generate clip_index.json from annotated dataset
   generate_surgical_index.py   ← (authors only) generate surgical_index from curated full videos
   requirements.txt
+
+dataset-evaluation/
+  dataset_evaluation.py        ← evaluate_model() and evaluate_atlas_temporal() entry points
+  metrics.py                   ← compute_class_metrics() (IoU/Dice) and SegmentationAPEvaluator
 
 atlas120k/
   classes.py                   ← class definitions, colour palette, train ID mapping
@@ -249,6 +254,51 @@ train_mask = lut[original_mask]
 # Colour palette for visualisation
 from atlas120k.classes import train_palette  # {train_id: (R, G, B)}
 ```
+
+## Evaluation
+
+The `dataset-evaluation/` module provides ready-to-use evaluation functions for models trained on ATLAS-120k.
+
+### Metrics
+
+| Metric | Description |
+|---|---|
+| **mIoU** | Mean Intersection over Union across foreground classes |
+| **mDice** | Mean Dice coefficient across foreground classes |
+| **AP / AP50 / AP75** | COCO-style Average Precision (binary, frame-level) |
+| **mVC₁₂ / mVC₂₄** | Mean Video Consistency over sliding windows of 12 and 24 frames |
+
+### Standard model
+
+```python
+from dataset-evaluation.dataset_evaluation import evaluate_model
+
+results = evaluate_model(
+    model=model,
+    dataloader=test_loader,
+    device=device,
+    num_classes=30,     # number of foreground classes (background excluded)
+    compute_ap=True,    # set False to skip AP for faster evaluation
+)
+# results: mIoU, Dice, AP, AP50, AP75, per_class_iou, per_class_dice, mVC_8, mVC_12, mVC_24
+```
+
+### ATLAS temporal model (with query propagation)
+
+```python
+from dataset-evaluation.dataset_evaluation import evaluate_atlas_temporal
+
+results = evaluate_atlas_temporal(
+    model=model,
+    test_loader=test_loader,   # must yield frames in clip order, batch size = 1
+    device=device,
+    num_classes=30,
+    use_query_propagation=True,
+    compute_ap=True,
+)
+```
+
+The dataloader must supply batches with keys `"image"`, `"mask"`, `"procedure"`, `"video"`, and `"clip"`. Frames within a clip must be yielded in temporal order; query embeddings are automatically reset at clip boundaries.
 
 ## Versioning
 
