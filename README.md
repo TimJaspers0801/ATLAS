@@ -54,6 +54,8 @@ The full ATLAS project spans multiple repositories:
 
 42 classes including: liver, gallbladder, cystic duct, hepatic ligament, cystic plate, ductus choledochus, ductus hepaticus, stomach, small intestine, colon/rectum, abdominal wall, diaphragm, omentum, aorta, vena cava, artery (major), vein (major), nerve (major), spleen, pancreas, duodenum, kidney, bladder, ureter, uterus, ovary, prostate, seminal vesicles, adrenal gland, mesocolon, mesenterium, V. azygos, esophagus, pericardium, airway (bronchus/trachea), lung, catheter, and tools/camera.
 
+Full class definitions — including the consolidated 30-class training taxonomy and colour palette — are provided in [`atlas120k/classes.py`](atlas120k/classes.py).
+
 ## Getting Started
 
 ### Prerequisites
@@ -75,14 +77,14 @@ atlas120k/
   train/  val/  test/
     └── <procedure>/
           └── <video_folder>/
-                ├── clip_index.json        ← frame lists per clip
+                ├── clip_index.json        ← annotated frame lists per clip
                 └── <clip>/
-                      └── machine_masks/   ← segmentation masks
+                      └── machine_masks/   ← segmentation masks (pixel value = class ID)
 ```
 
 ### Step 2 — Download raw videos from YouTube
 
-YouTube links for each procedure are in `data/youtube_links/`. Add the URLs for each procedure to the corresponding `.txt` file (one URL per line), then run:
+YouTube links for each procedure are provided in `data/youtube_links/` (one `.txt` file per procedure, one URL per line). Run:
 
 ```bash
 python download/download_videos.py \
@@ -96,28 +98,68 @@ Videos are saved to `raw_data/<procedure>/<youtube_id>.<ext>`.
 
 ### Step 3 — Process videos into the dataset
 
-This script converts each raw video to 15 fps and extracts the exact frames listed in the clip index files, saving them into the `images/` subfolder of each clip inside the annotation download.
+This script converts each raw video to 15 fps, applies the surgical frame filter (skipping non-surgical content identified during dataset curation), and extracts the exact annotated frames into the `images/` subfolder of each clip.
 
 ```bash
 python download/process_atlas120k.py \
-    --raw_data_dir raw_data \
-    --atlas_dir    atlas120k \
-    --workers      4
+    --raw_data_dir       raw_data \
+    --atlas_dir          atlas120k \
+    --surgical_index_dir data/surgical_index \
+    --workers            4
 ```
 
 To process only specific procedures or splits:
 
 ```bash
 python download/process_atlas120k.py \
-    --raw_data_dir raw_data \
-    --atlas_dir    atlas120k \
-    --splits       test \
-    --procedures   cholecystectomy appendectomy
+    --raw_data_dir       raw_data \
+    --atlas_dir          atlas120k \
+    --surgical_index_dir data/surgical_index \
+    --splits             test \
+    --procedures         cholecystectomy appendectomy
+```
+
+To also save **all** surgical frames per video (reproducing the full 15 fps surgical-only video):
+
+```bash
+python download/process_atlas120k.py \
+    --raw_data_dir           raw_data \
+    --atlas_dir              atlas120k \
+    --surgical_index_dir     data/surgical_index \
+    --save_surgical_frames \
+    --surgical_frames_dir    atlas120k_full_videos \
+    --workers                4
+```
+
+## Repository Structure
+
+```
+data/
+  youtube_links/               ← one .txt per procedure with YouTube URLs
+    cholecystectomy.txt
+    appendectomy.txt
+    ...
+  surgical_index/              ← per-video surgical frame range (included in this repo)
+    cholecystectomy/
+      4FpUGXO9mzg.json
+      ...
+    appendectomy/
+    ...
+
+download/
+  download_videos.py           ← Step 2: download YouTube videos
+  process_atlas120k.py         ← Step 3: extract frames with surgical filtering
+  generate_clip_index.py       ← (authors only) generate clip_index.json from annotated dataset
+  generate_surgical_index.py   ← (authors only) generate surgical_index from curated full videos
+  requirements.txt
+
+atlas120k/
+  classes.py                   ← class definitions, colour palette, train ID mapping
 ```
 
 ## Dataset Structure
 
-After completing all steps the dataset looks like:
+After completing all steps the full dataset looks like:
 
 ```
 raw_data/                               ← raw YouTube downloads (Step 2)
@@ -125,38 +167,36 @@ raw_data/                               ← raw YouTube downloads (Step 2)
     4FpUGXO9mzg.mp4
     J5bg8KTYrw0.mp4
     ...
-  appendectomy/
-    ...
 
-atlas120k/                              ← HuggingFace download + extracted frames
+atlas120k/                              ← HuggingFace download + extracted frames (Step 3)
   train/
     cholecystectomy/
       4FpUGXO9mzg/
-        clip_index.json                 ← frame numbers per clip (from HF)
+        clip_index.json                 ← annotated frame numbers per clip
         clip_0001/
           images/                       ← extracted by process_atlas120k.py
             frame_000000.jpg
             frame_000001.jpg
             ...
-          machine_masks/                ← from HuggingFace
+          machine_masks/                ← segmentation masks (from HuggingFace)
             frame_000000.png
             frame_000001.png
             ...
       J5bg8KTYrw0_ROBOT/
         ...
-  val/
-    ...
-  test/
+  val/  test/
     ...
 ```
 
 Frame filenames encode the **global frame index in the 15 fps video** (e.g. `frame_000964.jpg` is frame 964 of the downsampled video). Frames within a clip may be non-contiguous — the `clip_index.json` files list the exact frames included.
 
-Segmentation masks are single-channel PNG files where each pixel value is a class index. The class-to-index mapping is provided in `class_index.json` in the HuggingFace release.
+Segmentation masks are single-channel PNG files where each pixel value is a class ID. See [`atlas120k/classes.py`](atlas120k/classes.py) for the full ID-to-name mapping and colour palette.
 
-## Clip Index Format
+## Reference Files
 
-Each video directory contains a `clip_index.json` file:
+### Clip Index (`clip_index.json`)
+
+Located at `<split>/<procedure>/<video_folder>/clip_index.json` in the HuggingFace download. Lists the exact frame numbers belonging to every annotated clip.
 
 ```json
 {
@@ -167,13 +207,47 @@ Each video directory contains a `clip_index.json` file:
   "is_robot": true,
   "frame_digits": 6,
   "clips": {
-    "clip_0001": [964, 965, 966, ...],
-    "clip_0002": [1004, 1005, ..., 1264]
+    "clip_0001": [964, 965, 966, "..."],
+    "clip_0002": [1004, 1005, "...", 1264]
   }
 }
 ```
 
-`frame_digits` is the zero-padding width used in all frame filenames for that video (either 4 or 6). The clip index files are generated by `download/generate_clip_index.py` (dataset authors only) and distributed with the HuggingFace release.
+`frame_digits` is the zero-padding width used in all frame filenames for that video (4 or 6).
+
+### Surgical Index (`data/surgical_index/<procedure>/<youtube_id>.json`)
+
+Included in this repository. Records which portions of each raw video contain surgical content, so that non-surgical frames (pre-operative setup, post-operative, text overlays, etc.) are automatically skipped during processing.
+
+```json
+{
+  "youtube_id": "6X7BRo4hNt8",
+  "procedure": "esophagectomy",
+  "start_frame": 77,
+  "end_frame": 12244,
+  "excluded_ranges": [[9543, 9963]],
+  "total_surgical_frames": 11747
+}
+```
+
+`excluded_ranges` lists `[from, to]` (inclusive) ranges of non-surgical frames within the surgical window. For videos without removals, `excluded_ranges` is empty and the surgical content runs contiguously from `start_frame` to `end_frame`.
+
+### Class Definitions (`atlas120k/classes.py`)
+
+Defines the full 46-entry original class taxonomy and the consolidated 30-class training taxonomy, modelled after the Cityscapes label format:
+
+```python
+from atlas120k import atlas_classes, train_classes
+import numpy as np
+
+# Convert an original mask (pixel = class ID 0–46) to training IDs (0–29)
+from atlas120k.classes import id_to_train_id
+lut = np.array(id_to_train_id, dtype=np.uint8)
+train_mask = lut[original_mask]
+
+# Colour palette for visualisation
+from atlas120k.classes import train_palette  # {train_id: (R, G, B)}
+```
 
 ## Ethics
 

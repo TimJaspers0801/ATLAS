@@ -1,0 +1,8 @@
+{
+  "youtube_id": "ZQmRKPkyB3Q",
+  "procedure": "sigmoid",
+  "start_frame": 0,
+  "end_frame": 4399,
+  "excluded_ranges": [],
+  "total_surgical_frames": 4400
+}

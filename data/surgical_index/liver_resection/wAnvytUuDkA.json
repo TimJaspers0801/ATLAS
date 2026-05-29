@@ -1,0 +1,13 @@
+{
+  "youtube_id": "wAnvytUuDkA",
+  "procedure": "liver_resection",
+  "start_frame": 59,
+  "end_frame": 7967,
+  "excluded_ranges": [
+    [
+      60,
+      282
+    ]
+  ],
+  "total_surgical_frames": 7686
+}

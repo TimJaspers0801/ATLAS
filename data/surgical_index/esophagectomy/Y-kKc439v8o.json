@@ -1,0 +1,21 @@
+{
+  "youtube_id": "Y-kKc439v8o",
+  "procedure": "esophagectomy",
+  "start_frame": 0,
+  "end_frame": 8142,
+  "excluded_ranges": [
+    [
+      36,
+      184
+    ],
+    [
+      3966,
+      3990
+    ],
+    [
+      3993,
+      4156
+    ]
+  ],
+  "total_surgical_frames": 7805
+}
