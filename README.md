@@ -119,7 +119,7 @@ python download/download_videos.py \
 
 Videos are saved to `raw_data/<procedure>/<youtube_id>.<ext>`.
 
-> **Note:** 3 videos (`rclg8c8dQ1Q`, `EjKZ3ddx8eY`, `ZQmRKPkyB3Q`) are members-only YouTube videos and cannot be downloaded automatically. Their processed frames are included directly in the HuggingFace release, so no action is needed. They are listed in [`data/youtube_links/unavailable.txt`](data/youtube_links/unavailable.txt) for reference.
+> **Note:** 3 videos are no longer publicly available on YouTube. For these videos both the segmentation masks and the processed frames are included directly in the HuggingFace release — no download is required. The raw full videos are not available. These 3 videos will be replaced with new ones in a future dataset release.
 
 ### Step 3 — Process videos into the dataset
 
