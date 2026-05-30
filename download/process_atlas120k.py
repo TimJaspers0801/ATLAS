@@ -232,76 +232,69 @@ def process_video(task: dict) -> dict:
         stream_end = max_clip_frame
 
     if stream_end < 0 and not save_surgical:
-        # All clips already done, nothing to write
         result["ok"] = True
         return result
 
-    # ── Get video dimensions ─────────────────────────────────────────────────
-    try:
-        w, h, _ = get_video_info(video_path)
-    except Exception as exc:
-        result["error"] = f"ffprobe failed: {exc}"
-        return result
-
-    frame_size = w * h * 3
     encode_params = [cv2.IMWRITE_JPEG_QUALITY, max(1, 100 - quality * 10)]
 
-    # ── Stream at TARGET_FPS and write frames ────────────────────────────────
-    cmd = [
-        "ffmpeg", "-i", str(video_path),
-        "-vf", f"fps={TARGET_FPS}",
-        "-f", "rawvideo",
-        "-pix_fmt", "bgr24",
-        "-loglevel", "error",
-        "pipe:1",
-    ]
-
+    # ── Open video and determine frame interval ───────────────────────────────
+    # Use the same sampling logic as the original dataset creation script:
+    #   frame_interval = int(video_fps / TARGET_FPS)
+    # For most YouTube videos (29.97 or 25fps), int(fps/15) = 1, meaning every
+    # native frame is saved. Clip index frame numbers therefore correspond to
+    # native frame positions, NOT to a strict 15fps output stream.
     try:
-        proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        current_idx = 0
+        cap = cv2.VideoCapture(str(video_path))
+        if not cap.isOpened():
+            result["error"] = f"Cannot open video: {video_path}"
+            return result
 
-        while current_idx <= stream_end:
-            raw = proc.stdout.read(frame_size)
-            if len(raw) < frame_size:
+        native_fps = cap.get(cv2.CAP_PROP_FPS)
+        frame_interval = max(1, int(native_fps / TARGET_FPS))
+
+        frame_count = 0   # raw frame counter (native video frames)
+        saved_count = 0   # output index — matches original script's saved_count
+
+        while True:
+            ret, frame = cap.read()
+            if not ret:
                 break
 
-            # Skip non-surgical prefix and excluded ranges
-            is_surgical = (
-                current_idx >= surg_start
-                and current_idx not in surg_excluded
-                and (surg_end is None or current_idx <= surg_end)
-            )
+            if frame_count % frame_interval == 0:
+                # saved_count now corresponds to the index used in clip_index.json
+                if saved_count > stream_end:
+                    break
 
-            if is_surgical:
-                if current_idx in needed or (save_surgical and surgical_out is not None):
-                    frame = np.frombuffer(raw, dtype=np.uint8).reshape((h, w, 3))
+                is_surgical = (
+                    saved_count >= surg_start
+                    and saved_count not in surg_excluded
+                    and (surg_end is None or saved_count <= surg_end)
+                )
 
-                    # Save surgical frame if requested
+                if is_surgical:
                     if save_surgical and surgical_out is not None:
-                        surg_path = surgical_out / f"frame_{current_idx:0{frame_digits}d}.jpg"
+                        surg_path = surgical_out / f"frame_{saved_count:0{frame_digits}d}.jpg"
                         cv2.imwrite(str(surg_path), frame, encode_params)
                         result["surgical_written"] += 1
 
-                    # Save clip frames
-                    for out_path in needed.get(current_idx, []):
+                    for out_path in needed.get(saved_count, []):
                         cv2.imwrite(str(out_path), frame, encode_params)
                         result["frames_written"] += 1
 
-            current_idx += 1
+                saved_count += 1
 
-        proc.stdout.close()
-        proc.wait()
+            frame_count += 1
 
-        if proc.returncode not in (0, None) and result["frames_written"] == 0 and result["surgical_written"] == 0:
-            stderr = proc.stderr.read().decode()
-            result["error"] = f"ffmpeg exited {proc.returncode}: {stderr[:300]}"
-            return result
+        cap.release()
 
     except Exception as exc:
         result["error"] = str(exc)
         return result
 
-    result["clips_done"] += len(clips) - (result["clips_done"])
+    result["clips_done"] = sum(
+        1 for clip_id, frame_nums in clips.items()
+        if sum(1 for _ in (Path(clip_dirs[clip_id]) / "images").glob("frame_*.jpg")) == len(frame_nums)
+    )
     result["ok"] = True
     return result
 
