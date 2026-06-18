@@ -27,7 +27,7 @@ The full ATLAS project spans multiple repositories:
 |---|---|
 | **This repo** | Dataset download and processing scripts |
 | [ATLAS-interactive](https://github.com/rlpddejong/ATLAS-Interactive) | Annotation platform, interactive segmentation tools and annotation models |
-| [ATLAS-model]() | ATLAS model implementation and training code | 
+| [ATLAS-model](https://github.com/rlpddejong/ATLAS-model) | ATLAS model implementation and training code | 
 | [ATLAS-bench](https://github.com/TimJaspers0801/atlas-bench-public) | Benchmark experiments of various SOTA models |
 | [SurgeNetDINO](https://github.com/rlpddejong/SurgeNetDINO) | Pretrained DINOv1/v2/v3 surgical foundation backbones |
 | [SurgeNet](https://github.com/TimJaspers0801/SurgeNet) | SurgeNet pretraining dataset used for surgical foundation models |
