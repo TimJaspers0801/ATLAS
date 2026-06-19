@@ -93,7 +93,7 @@ Option A is simpler. Option B is useful on headless servers where no browser is 
 
 ### Step 1 — Download annotations from HuggingFace
 
-Download the annotation archive from (https://huggingface.co/datasets/TimJaspersTue/ATLAS-120k) and extract it to a local directory, e.g. `atlas120k/`. This contains the segmentation masks and per-video clip index files, but **not** the images (which you provide by downloading the YouTube videos in Step 2).
+Download the annotation archive from [HuggingFace](https://huggingface.co/datasets/TimJaspersTue/ATLAS-120k) and extract it to a local directory, e.g. `atlas120k/`. This contains the segmentation masks and per-video clip index files, but **not** the images (which you provide by downloading the YouTube videos in Step 2).
 
 ```
 atlas120k/
