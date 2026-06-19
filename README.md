@@ -17,7 +17,7 @@
 
 ATLAS-120k is a large-scale clip-level semantic segmentation dataset for surgical anatomy recognition in minimally invasive surgery (MIS). It comprises over **120,000 annotated frames** from **100 surgical videos** spanning **14 procedures** and **42 anatomical classes**, covering both laparoscopic and robot-assisted surgery.
 
-This repository provides the tools to download and process the raw video data. Annotations (segmentation masks) are distributed separately on [HuggingFace](https://huggingface.co/TimJaspersTue/datasets/atlas120k).
+This repository provides the tools to download and process the raw video data. Annotations (segmentation masks) are distributed separately on [HuggingFace](https://huggingface.co/datasets/TimJaspersTue/ATLAS-120k).
 
 ## Repository Ecosystem
 
