@@ -364,6 +364,7 @@ See [`CHANGELOG.md`](CHANGELOG.md) for the full history of changes.
 The video sources for ATLAS-120k were drawn from the **[GSViT dataset](https://github.com/SamuelSchmidgall/GSViT)**. We thank the authors for making their collection publicly available.
 
 The download pipeline in this repository was inspired by the tooling from **[SurgLaVi](https://github.com/aperezr20/SurgLaVi)** and **[LEMON](https://github.com/visurg-ai/LEMON)**.
+We also acknowledge **[YouTube-VOS](https://youtube-vos.org/)** as inspiration for creating a large-scale video dataset setting, adapted here to the surgical domain.
 
 ## License
 
