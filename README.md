@@ -44,12 +44,12 @@ The full ATLAS project spans multiple repositories:
 | **ATLAS-120k** | **14** | **42** | **100** | **502** | **121,018** | **✓** | **✓** |
 
 ### Procedures
-||||
+| | | | |
 |---|---|---|---|
 | Adrenalectomy | Appendectomy | Cholecystectomy | Colectomy |
 | Esophagectomy | Gastric surgery | Gastrojejunostomy | Hemicolectomy |
 | Laparoscopic anterior resection (LAR) | Liver resection | RARP | Rectopexy |
-| Sigmoid resection | Splenectomy | | |
+| Sigmoid resection | Splenectomy |  |  |
 
 ### Anatomical Classes
 
