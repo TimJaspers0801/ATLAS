@@ -45,7 +45,6 @@ The full ATLAS project spans multiple repositories:
 
 ### Procedures
 
-| | | | |
 |---|---|---|---|
 | Adrenalectomy | Appendectomy | Cholecystectomy | Colectomy |
 | Esophagectomy | Gastric surgery | Gastrojejunostomy | Hemicolectomy |
