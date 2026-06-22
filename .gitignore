@@ -1,1 +1,7 @@
 .claude/
+
+
+*.mp4
+*.mp4.part
+
+cookies.txt
