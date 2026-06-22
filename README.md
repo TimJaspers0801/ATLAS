@@ -55,17 +55,19 @@ The full ATLAS project spans multiple repositories:
 
 42 classes including: liver, gallbladder, cystic duct, hepatic ligament, cystic plate, ductus choledochus, ductus hepaticus, stomach, small intestine, colon/rectum, abdominal wall, diaphragm, omentum, aorta, vena cava, artery (major), vein (major), nerve (major), spleen, pancreas, duodenum, kidney, bladder, ureter, uterus, ovary, prostate, seminal vesicles, adrenal gland, mesocolon, mesenterium, V. azygos, esophagus, pericardium, airway (bronchus/trachea), lung, catheter, and tools/camera.
 
-Full class definitions — including the consolidated 30-class training taxonomy and colour palette — are provided in [`atlas120k/classes.py`](atlas120k/classes.py).
+Full class definitions — including the consolidated 30-class training taxonomy and colour palette — are provided in [`atlas120k_tools/classes.py`](atlas120k_tools/classes.py).
 
 ## Getting Started
 
 ### Prerequisites
 
 ```bash
-pip install -r download/requirements.txt
+pip install -r requirements.txt
 ```
 
 `ffmpeg` must be installed and available on `PATH` — it is used for fps conversion and frame extraction. See [ffmpeg.org](https://ffmpeg.org/download.html). Note: only `ffmpeg` itself is required; `ffprobe` is not needed as video metadata is read via OpenCV.
+
+A JavaScript runtime (**[Deno](https://deno.com/)** recommended, or Node.js / Bun) must also be on `PATH`. yt-dlp uses it to solve YouTube's challenge that protects the video stream URLs; without it downloads return only storyboard images and fail with `Only images are available`. Install Deno (e.g. `winget install DenoLand.Deno` on Windows, or see [deno.com](https://deno.com/)) and confirm with `deno --version`.
 
 **YouTube cookies are required.** The source videos are surgical content that YouTube marks as age-restricted. You must be signed in to YouTube in your browser, then authenticate the downloader using one of two methods:
 
@@ -92,7 +94,36 @@ Option A is simpler. Option B is useful on headless servers where no browser is 
 
 ### Step 1 — Download annotations from HuggingFace
 
-Download the annotation archive from [HuggingFace](https://huggingface.co/datasets/TimJaspersTue/ATLAS-120k) and extract it to a local directory, e.g. `atlas120k/`. This contains the segmentation masks and per-video clip index files, but **not** the images (which you provide by downloading the YouTube videos in Step 2).
+Download the annotations from [HuggingFace](https://huggingface.co/datasets/TimJaspersTue/ATLAS-120k) into a local directory called `atlas120k/`. This contains the segmentation masks and per-video clip index files, but **not** the images (which you provide by downloading the YouTube videos in Step 2).
+
+The dataset is **gated**: first sign in on HuggingFace, open the [dataset page](https://huggingface.co/datasets/TimJaspersTue/ATLAS-120k), and accept the terms. You will also need an access token from [huggingface.co/settings/tokens](https://huggingface.co/settings/tokens) (a **Read** token, or a fine-grained token with "Read access to contents of all public gated repos" enabled).
+
+**Recommended — `git clone` (most reliable for the ~120k small files).** Because the dataset is many tiny mask files, the HuggingFace REST API (used by `hf download`) quickly hits a rate limit of 1000 requests per 5 minutes and stalls. `git clone` transfers everything over the git protocol in batches and avoids this entirely. Make sure [git-lfs](https://git-lfs.com/) is installed (`git lfs install`), then:
+
+```bash
+git clone https://USER:TOKEN@huggingface.co/datasets/TimJaspersTue/ATLAS-120k atlas120k
+```
+
+Replace `USER` with your HuggingFace username and `TOKEN` with your `hf_...` access token. For large repos you can skip the LFS blobs during clone and pull them in a single batched pass afterwards:
+
+```bash
+GIT_LFS_SKIP_SMUDGE=1 git clone https://USER:TOKEN@huggingface.co/datasets/TimJaspersTue/ATLAS-120k atlas120k
+cd atlas120k && git lfs pull
+```
+
+After cloning, strip the embedded credentials from the local repo config:
+
+```bash
+git -C atlas120k remote set-url origin https://huggingface.co/datasets/TimJaspersTue/ATLAS-120k
+```
+
+**Alternative — `hf` CLI** (simpler, but slower and rate-limit prone on a dataset this size; `huggingface_hub` is included in `requirements.txt`). Authenticate with `hf auth login` first, then keep `--max-workers` low to stay under the API rate limit:
+
+```bash
+hf download TimJaspersTue/ATLAS-120k --repo-type dataset --local-dir atlas120k --max-workers 2
+```
+
+It resumes interrupted transfers, so you can safely re-run it if it stops.
 
 ```
 atlas120k/
@@ -176,14 +207,18 @@ download/
   dataset_stats.py             ← print per-split statistics and cross-check dataset_info.json
   generate_clip_index.py       ← (authors only) generate clip_index.json from annotated dataset
   generate_surgical_index.py   ← (authors only) generate surgical_index from curated full videos
-  requirements.txt
 
 dataset-evaluation/
   dataset_evaluation.py        ← evaluate_model() and evaluate_atlas_temporal() entry points
   metrics.py                   ← compute_class_metrics() (IoU/Dice) and SegmentationAPEvaluator
 
-atlas120k/
+atlas120k_tools/               ← Python package (import as `atlas120k_tools`)
+  __init__.py
   classes.py                   ← class definitions, colour palette, train ID mapping
+
+atlas120k/                     ← dataset download target (Step 1; not in this repo)
+
+requirements.txt               ← Python dependencies for all steps
 ```
 
 ## Dataset Structure
@@ -219,7 +254,7 @@ atlas120k/                              ← HuggingFace download + extracted fra
 
 Frame filenames encode the **global frame index in the 15 fps video** (e.g. `frame_000964.jpg` is frame 964 of the downsampled video). Frames within a clip may be non-contiguous — the `clip_index.json` files list the exact frames included.
 
-Segmentation masks are single-channel PNG files where each pixel value is a class ID. See [`atlas120k/classes.py`](atlas120k/classes.py) for the full ID-to-name mapping and colour palette.
+Segmentation masks are single-channel PNG files where each pixel value is a class ID. See [`atlas120k_tools/classes.py`](atlas120k_tools/classes.py) for the full ID-to-name mapping and colour palette.
 
 ## Reference Files
 
@@ -261,21 +296,21 @@ Included in this repository. Records which portions of each raw video contain su
 
 `excluded_ranges` lists `[from, to]` (inclusive) ranges of non-surgical frames within the surgical window. For videos without removals, `excluded_ranges` is empty and the surgical content runs contiguously from `start_frame` to `end_frame`.
 
-### Class Definitions (`atlas120k/classes.py`)
+### Class Definitions (`atlas120k_tools/classes.py`)
 
 Defines the full 46-entry original class taxonomy and the consolidated 30-class training taxonomy, modelled after the Cityscapes label format:
 
 ```python
-from atlas120k import atlas_classes, train_classes
+from atlas120k_tools import atlas_classes, train_classes
 import numpy as np
 
 # Convert an original mask (pixel = class ID 0–46) to training IDs (0–29)
-from atlas120k.classes import id_to_train_id
+from atlas120k_tools.classes import id_to_train_id
 lut = np.array(id_to_train_id, dtype=np.uint8)
 train_mask = lut[original_mask]
 
 # Colour palette for visualisation
-from atlas120k.classes import train_palette  # {train_id: (R, G, B)}
+from atlas120k_tools.classes import train_palette  # {train_id: (R, G, B)}
 ```
 
 ## Evaluation

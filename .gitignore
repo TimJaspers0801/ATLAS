@@ -1,7 +1,17 @@
-.claude/
-
-
+# Files
+*.png
+*.jpg
 *.mp4
 *.mp4.part
-
 cookies.txt
+
+# Python
+__pycache__/
+*.pyc
+
+# Step 1 dataset download target / Step 2 raw videos
+atlas120k/
+raw_data/
+
+# Other
+.claude/

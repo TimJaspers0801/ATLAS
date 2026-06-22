@@ -12,7 +12,7 @@ carrying its own display colour for visualising model predictions.
 
 Usage
 -----
-    from atlas120k import atlas_classes, train_classes
+    from atlas120k_tools import atlas_classes, train_classes
 
     # Map an original mask to training IDs
     import numpy as np
