@@ -5,7 +5,7 @@
 **Surgical Anatomy Recognition with Context Learning using Foundation Representations**
 
 [![Paper](https://img.shields.io/badge/Paper-MICCAI_2026-blue?style=flat)](https://arxiv.org/)
-[![Dataset](https://img.shields.io/badge/🤗_Dataset-HuggingFace-ffcc00?style=flat)]([https://huggingface.co/TimJaspersTue/datasets/ATLAS-120k](https://huggingface.co/datasets/TimJaspersTue/ATLAS-120k))
+[![Dataset](https://img.shields.io/badge/🤗_Dataset-HuggingFace-ffcc00?style=flat)](https://huggingface.co/datasets/TimJaspersTue/ATLAS-120k)
 [![Version](https://img.shields.io/badge/dataset-v0.1.0-green?style=flat)](CHANGELOG.md)
 [![License: CC BY-NC-SA 4.0](https://img.shields.io/badge/License-CC_BY--NC--SA_4.0-lightgrey.svg)](https://creativecommons.org/licenses/by-nc-sa/4.0/)
 
