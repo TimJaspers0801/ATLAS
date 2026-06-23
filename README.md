@@ -411,6 +411,13 @@ Code in this repository: [MIT License](LICENSE)
 If you use ATLAS-120k in your research, please cite:
 
 ```bibtex
-@inproceedings{TBA,
+@misc{dejong2026atlas,
+      title={Surgical Anatomy Recognition with Context Learning using Foundation Representations}, 
+      author={Ronald L. P. D. de Jong and Tim J. M. Jaspers and Raf A. H. Vervoort and Aron F. H. A. Bakker and Yiping Li and Jip L. Tolenaar and Jelle P. Ruurda and Willem M. Brinkman and Josien P. W. Pluim and Marcel Breeuwer and Daan de Geus and Fons van der Sommen},
+      year={2026},
+      eprint={2606.22124},
+      archivePrefix={arXiv},
+      primaryClass={cs.CV},
+      url={https://arxiv.org/abs/2606.22124}, 
 }
 ```
